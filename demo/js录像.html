@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <!-- <meta http-equiv="Content-Security-Policy" content="default-src unsafe-inline; "> -->
+  <title></title>
+</head>
+<style>
+  video {
+    width: 640px;
+    height: 480px;
+  }
+
+  button {
+    width: 100px;
+    border: 1px solid gray;
+    margin: 20px;
+  }
+
+  footer {
+    clear: both;
+  }
+
+  #download {
+    text-decoration: none;
+  }
+
+  .flex {
+    display: flex;
+    justify-content: space-around;
+  }
+
+  footer {
+    text-align: center;
+  }
+</style>
+
+<body>
+  <main class="flex">
+    <video controls class="stream"></video>
+    <video controls class="play"></video>
+  </main>
+  <footer>
+    <button class="start">开始录像</button>
+    <button class="end">停止录像</button>
+    <button class="play-video">播放录像</button>
+    <button>
+      <a href="javascript:void 0;" id="download" download="视频文件">下载视频</a>
+    </button>
+  </footer>
+</body>
+
+</html>
+<!-- <script>
+  const streamVideo = document.querySelector('.stream')
+  const playVideo = document.querySelector('.play');
+  const download = document.querySelector('#download');
+  let chunk;
+  let recorder;
+  let mediaStream;
+  const constraints = {
+    audio: false,
+    video: true,
+  };
+  navigator.mediaDevices.getUserMedia(constraints)
+      .then(stream => {
+        mediaStream = stream;
+        streamVideo.srcObject = stream;
+        streamVideo.play();
+        recorder = new MediaRecorder(stream);
+        recorder.ondataavailable = e => {
+          chunk = e.data;
+          download.href = URL.createObjectURL(chunk);
+        };
+        recorder.start();
+      })
+  console.log(11111111111111)
+  console.log(navigator.mediaDevices, Navigator.getUserMedia)
+</script> -->
+<script>
+  const streamVideo = document.querySelector('.stream')
+  const playVideo = document.querySelector('.play');
+  let chunk;
+  const download = document.querySelector('#download');
+  let recorder;
+  let mediaStream;
+  document.querySelector('.start').addEventListener('click', start);
+  document.querySelector('.end').addEventListener('click', end);
+  document.querySelector('.play-video').addEventListener('click', play);
+  // MediaRecorder 测试
+  const constraints = {
+    audio: false,
+    video: true,
+  };
+  function start() {
+    navigator.mediaDevices.getUserMedia(constraints)
+      .then(stream => {
+        mediaStream = stream;
+        streamVideo.srcObject = stream;
+        streamVideo.play();
+        recorder = new MediaRecorder(stream);
+        recorder.ondataavailable = e => {
+          chunk = e.data;
+          download.href = URL.createObjectURL(chunk);
+        };
+        recorder.start();
+      })
+  }
+  function end() {
+    streamVideo.pause();
+    recorder.stop();
+    mediaStream.getTracks().forEach(track => {
+      track.stop();
+    });
+  }
+  function play() {
+    playVideo.src = URL.createObjectURL(chunk);
+    playVideo.play();
+  }
+</script>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<style>
+  canvas {
+    box-shadow: 0 0 10px gray;
+    display: block;
+  }
+
+  body {
+    text-align: center;
+  }
+
+  button {
+    margin-top: 20px;
+  }
+</style>
+
+<body>
+  <canvas id="webm-canvas" height=160 width=640 style="width:640px;margin:auto;"></canvas>
+  <button onclick="startRecording()">开始录制（先点）</button>
+  <button onclick="stopAndblobDownload()">下载录像（再点）</button>
+</body>
+<script>
+  var canvas = document.getElementById("webm-canvas");
+  window.requestAnimationFrame(draw)
+  var x = 20;
+  var speed = 4;
+  // 回调函数执行次数通常是每秒60次
+  let context = canvas.getContext('2d');
+  function draw() {
+    //1. 先把画布清空
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    //2. 画小球
+    context.beginPath();
+    context.fillStyle = "#FF0000";
+    context.arc(x, 80, 20, 0, 2 * Math.PI);
+    context.fillText('x:' + x, 10, 10);
+    context.fill();
+    //3. x要移动
+    x += speed;
+    if (x > canvas.width - 20 || x < 20) {
+      speed = -speed;
+    }
+    //被优化过的动画执行方向1.递归调用；2.可以自适应浏览器的刷新的帧率
+    window.requestAnimationFrame(draw);
+  }
+
+  var allChunks = [];
+  const stream2 = canvas.captureStream(60); // 60 FPS recording
+  const recorder = new MediaRecorder(stream2, {
+    mimeType: 'video/webm;codecs=vp9'
+  });
+  recorder.ondataavailable = e => {
+    //console.log("TCL: e", e)
+    allChunks.push(
+      e.data
+    );
+  }
+  //end & download
+  function stopAndblobDownload() {
+    recorder.stop();
+    const link = document.createElement('a');
+    link.style.display = 'none';
+    const fullBlob = new Blob(allChunks);
+    const downloadUrl = window.URL.createObjectURL(fullBlob);
+    link.href = downloadUrl;
+    link.download = `test${Math.random()}.webm`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }
+  //start
+  function startRecording() {
+
+    recorder.start(10);
+  }</script>
+
+</html>
