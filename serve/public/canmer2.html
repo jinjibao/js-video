@@ -24,17 +24,14 @@
   const button = document.getElementById('button')
   const canvas = document.getElementById("canvas")
   const context = canvas.getContext("2d")
-  // 捕捉canvas的内容，转化为MediaStream对象
-  const stream2 = canvas.captureStream(60);
+  const stream2 = video.captureStream(60);
   const change = document.getElementById('change')
   let facingMode = "environment"
   let currentStream = null
-  let allChunks = [];
-  // 创建一个录制MediaRecorder 对象
+  var allChunks = [];
   const recorder = new MediaRecorder(stream2, {
     mimeType: 'video/webm;codecs=vp9'
   });
-  // 将录制的Blob保存在allChunks
   recorder.ondataavailable = e => {
     allChunks.push(
       e.data
@@ -53,7 +50,6 @@
       track.stop();
     });
   }
-  // 打开摄像头
   function openCam() {
     if (currentStream) stopMediaTracks(currentStream);
     const constraints = {
@@ -65,14 +61,17 @@
     navigator.mediaDevices.getUserMedia(constraints)
       .then(function (stream) {
         currentStream = stream
-        // 将摄像头拍到的东西，通过video展现出来
-        video.srcObject = stream;
-        video.onloadedmetadata = function (e) {
-          video.play();
-        };
-        setInterval(() => {
-          context.drawImage(video, 0, 0, 640, 480);
-        }, Math.floor(1000 / 60));
+        if (window.URL) {
+          video.srcObject = stream;
+          video.onloadedmetadata = function (e) {
+            video.play();
+          };
+        } else {
+          video.src = stream;
+        }
+        // setInterval(() => {
+        //   context.drawImage(stream, 0, 0, 640, 480);
+        // }, Math.floor(1000 / 60));
       })
       .catch(function (err) {
         console.log(err)
@@ -82,11 +81,12 @@
     recorder.stop();
     const fullBlob = new Blob(allChunks);
     const downloadUrl = window.URL.createObjectURL(fullBlob);
+    video1.src = downloadUrl
+    video1.play();
   }
 
   //start
   function startRecording() {
-    // 每10ms记录一次，也就是执行ondataavailable
     recorder.start(10);
   }
 </script>

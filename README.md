@@ -22,10 +22,10 @@
 </body>
 <script>
     const video = document.getElementById("video")
-    const video = document.getElementById("video")
     button.addEventListener("click", function() {
         openCam()
     })
+    // 打开摄像头
     const openCam = function() {
         const constraints = {
             video: true,
@@ -80,6 +80,7 @@ let options = {
 let https_server = https.createServer(options, app);
 https_server.listen(8089)
 ```
+
 对于使用笔记本的同学来说，直接用手机访问localhost就可以了。下面在提供一种在Chrome中使用http访问的方法，在手机端测试下貌似不行，只有在pc上可以。
 
 > 打开 chrome://flags/#unsafely-treat-insecure-origin-as-secure
@@ -90,20 +91,18 @@ https_server.listen(8089)
 
 ``` JavaScript
 .then(function(stream) {
-    if (window.URL) {
-        video.srcObject = stream;
-        video.onloadedmetadata = function(e) {
-            video.play();
-        };
-    } else {
-        video.src = stream;
-    }
+    // 将摄像头拍到的东西，通过video展现出来
+    video.srcObject = stream;
+    video.onloadedmetadata = function(e) {
+        video.play();
+    };
 })
 ```
 
 ##### 二、打开后置摄像头
 
 现在我们能正常调起摄像头了，但是默认打开的是后置摄像头，只需要修改constraints就可以了
+
 ``` JavaScript
 //修改constraints
 const constraints = {
@@ -113,6 +112,7 @@ const constraints = {
     audio: false,
 };
 ```
+
 根据需求还需要一个转换摄像头的按钮。整体思路比较简单，当点击按钮是就关闭当前媒体，再重新打开一个相反的摄像头
 
 ``` JavaScript
@@ -148,7 +148,73 @@ function openCam() {
         }
 ```
 
-##### 开始录像
+##### 三、开始录像
 
-基本的事情我们都做到了，接下来就要
+基本的事情我们都做到了，接下来就要录制视屏, 代码实现
+
+``` JavaScript
+let allChunks = [];
+// 捕捉canvas的内容，转化为MediaStream对象
+const stream2 = canvas.captureStream(60);
+// 创建一个录制MediaRecorder 对象
+const recorder = new MediaRecorder(stream2, {
+    mimeType: 'video/webm;codecs=vp9'
+});
+//开始录制
+function startRecording() {
+    // 每10ms记录一次，也就是执行ondataavailable
+    recorder.start(10);
+}
+// 停止录制
+function stopAndblobDownload() {
+    recorder.stop();
+    // 将录制的数据流转化为Blob
+    const fullBlob = new Blob(allChunks);
+    // 生成一个路径，可上传下载
+    const downloadUrl = window.URL.createObjectURL(fullBlob);
+}
+// 将录制的数据流保存起来
+recorder.ondataavailable = e => {
+    allChunks.push(
+        e.data
+    );
+}
+
+function openCam() {
+    ......
+    then(res => {
+        navigator.mediaDevices.getUserMedia(constraints)
+            .then(function(stream) {
+                    ......
+                    // 把video写入到canvas中
+                    setInterval(() => {
+                        context.drawImage(video, 0, 0, 640, 480);
+                    }, Math.floor(1000 / 60));
+                }
+            }
+    })
+}
+```
+
+以上就基本实现了录制视频功能。
+
+##### 四、思路总结
+
+首先我们得用navigator.mediaDevices.getUserMedia获取摄像头权限，这里注意mediaDevices使用的条件。将getUserMedia的成功回调函数（then）中得到的媒体流，用video呈现，再用canvas（drawImage API）绘制vidoe。转换（captureStream API）canvas为MediaStream对象。通过MediaRecorder对象进行录制。其实captureStream是HTMLMediaElement原型上的方法，所有HTMLMediaElement都能调用，也就是说video能直接转换为MediaStream对象。修改代码：
+
+``` JavaScript
+  //  const stream2 = canvas.captureStream(60); 
+  const stream2 = video.captureStream(60);
+  ...
+  // setInterval(() => {
+  //   context.drawImage(stream, 0, 0, 640, 480);
+  // }, Math.floor(1000 / 60));
+  ...
+```
+
+这样我们就不需要canvas。
+
+##### 结束语
+
+第一次写这种东西，不喜勿喷。[完成demo]()
 
