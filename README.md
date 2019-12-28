@@ -216,5 +216,5 @@ function openCam() {
 
 ##### 结束语
 
-第一次写这种东西，不喜勿喷。[完成demo]()
+第一次写这种东西，不喜勿喷。[完成demo](https://github.com/smallmonsters/js-vidoe/blob/master/serve/public/canmer.html)
 
