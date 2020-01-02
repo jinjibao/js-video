@@ -51,15 +51,20 @@
 在手机运行demo，会发现navigator.mediaDevices总是undefined，原因是navigator.mediaDevices() 只有在以下三种环境中才能获取到：
 
 > 1、localhost 域
+
 > 2、开启了 HTTPS 的域
+
 > 3、使用 file:// 协议打开的本地文件
 
 因为我是用的pc开发，也没有摄像头，手机没发用localhost访问，就用node搭建了一个https服务
 a、生成证书文件
 
 > 1、打开git bash检测openssl是否安装：openssl version -a
+
 > 2、生成私钥key文件：openssl genrsa -out privatekey.pem 1024
+
 > 3、通过私钥生成CSR证书签名：openssl req -new -key privatekey.pem -out certrequest.csr
+
 > 4、通过私钥和证书签名生成证书文件：openssl x509 -req -in certrequest.csr -signkey privatekey.pem -out certificate.pem
 
 b、编写node代码
